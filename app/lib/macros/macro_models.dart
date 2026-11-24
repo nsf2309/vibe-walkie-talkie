@@ -18,6 +18,11 @@ enum MacroActionType {
   mediaNext,
   mediaPrev,
   taskView,
+  // Screenshots / squeeze
+  screenshotFull,
+  screenshotWindow,
+  screenshotWechat,
+  screenshotSnip,
   // Basic / editing
   escape,
   enter,
@@ -104,6 +109,10 @@ extension MacroActionTypeX on MacroActionType {
       case MacroActionType.mediaNext:
       case MacroActionType.mediaPrev:
       case MacroActionType.taskView:
+      case MacroActionType.screenshotFull:
+      case MacroActionType.screenshotWindow:
+      case MacroActionType.screenshotWechat:
+      case MacroActionType.screenshotSnip:
         return MacroActionCategory.media;
       case MacroActionType.agentAccept:
       case MacroActionType.agentReject:
@@ -151,6 +160,14 @@ extension MacroActionTypeX on MacroActionType {
         return '上一曲';
       case MacroActionType.taskView:
         return '多任务视图 (Win+Tab)';
+      case MacroActionType.screenshotFull:
+        return '全屏截图 (PrtSc)';
+      case MacroActionType.screenshotWindow:
+        return '当前窗口截图 (Alt+PrtSc)';
+      case MacroActionType.screenshotWechat:
+        return '微信截图 (Alt+A)';
+      case MacroActionType.screenshotSnip:
+        return '系统截图工具 (Win+Shift+S)';
       case MacroActionType.escape:
         return 'Esc';
       case MacroActionType.enter:
@@ -249,6 +266,14 @@ extension MacroActionTypeX on MacroActionType {
         return ['control', 'l'];
       case MacroActionType.taskView:
         return ['win', 'tab'];
+      case MacroActionType.screenshotFull:
+        return ['printscreen'];
+      case MacroActionType.screenshotWindow:
+        return ['alt', 'printscreen'];
+      case MacroActionType.screenshotWechat:
+        return ['alt', 'a'];
+      case MacroActionType.screenshotSnip:
+        return ['win', 'shift', 's'];
       case MacroActionType.copy:
         return ['control', 'c'];
       case MacroActionType.paste:
@@ -505,6 +530,17 @@ class MacroStore {
       keyF6,
       click: MacroAction(type: MacroActionType.taskView),
       long: MacroAction(type: MacroActionType.mute),
+    );
+    // Side squeeze: PTT + Vol (virtual keys from firmware)
+    set(
+      keySqueezeVolDown,
+      click: MacroAction(type: MacroActionType.screenshotFull),
+      long: MacroAction(type: MacroActionType.screenshotWechat),
+    );
+    set(
+      keySqueezeVolUp,
+      click: MacroAction(type: MacroActionType.screenshotWindow),
+      long: MacroAction(type: MacroActionType.screenshotSnip),
     );
   }
 

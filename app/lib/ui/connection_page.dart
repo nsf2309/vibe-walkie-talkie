@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../audio/virtual_mic.dart';
 import '../ble/vibemic_ble.dart';
 import '../input/key_injector.dart';
+import '../l10n/l10n_ext.dart';
 import '../settings/app_settings.dart';
 
 class ConnectionPage extends StatefulWidget {
@@ -44,14 +45,15 @@ class _ConnectionPageState extends State<ConnectionPage> {
   @override
   Widget build(BuildContext context) {
     final ble = widget.ble;
+    final l10n = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
       children: [
-        Text('连接与语音', style: Theme.of(context).textTheme.headlineSmall),
+        Text(l10n.connectionTitle, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 6),
         Text(
-          '按住板上 PTT 说话；松开停止。不要在 Windows 系统蓝牙里配对 VibeMic。',
+          l10n.connectionHint,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 20),
@@ -74,9 +76,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           builder: (_, status, __) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(on ? '已连接 VibeMic' : '未连接',
+                              Text(on ? l10n.connected : l10n.notConnected,
                                   style: Theme.of(context).textTheme.titleMedium),
-                              Text(status, style: Theme.of(context).textTheme.bodySmall),
+                              Text(formatBleStatus(l10n, status),
+                                  style: Theme.of(context).textTheme.bodySmall),
                             ],
                           ),
                         ),
@@ -85,7 +88,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         valueListenable: ble.ptt,
                         builder: (_, down, __) => Chip(
                           avatar: Icon(Icons.mic, size: 16, color: down ? Colors.red : null),
-                          label: Text(down ? '推流中' : '待机'),
+                          label: Text(down ? l10n.streaming : l10n.idle),
                         ),
                       ),
                     ],
@@ -99,12 +102,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 const SizedBox(height: 4),
                 ValueListenableBuilder(
                   valueListenable: ble.frames,
-                  builder: (_, n, __) => Text('音频帧 $n', style: Theme.of(context).textTheme.bodySmall),
+                  builder: (_, n, __) => Text(l10n.audioFrames(n), style: Theme.of(context).textTheme.bodySmall),
                 ),
                 const SizedBox(height: 4),
                 ValueListenableBuilder(
                   valueListenable: ble.lastButton,
-                  builder: (_, ev, __) => Text('最近按键：$ev', style: Theme.of(context).textTheme.bodySmall),
+                  builder: (_, ev, __) =>
+                      Text(l10n.lastKey(formatLastButton(l10n, ev)), style: Theme.of(context).textTheme.bodySmall),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -114,10 +118,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     FilledButton.icon(
                       onPressed: () => ble.startScanAndConnect(),
                       icon: const Icon(Icons.search),
-                      label: const Text('扫描并连接'),
+                      label: Text(l10n.scanConnect),
                     ),
-                    OutlinedButton(onPressed: () => ble.disconnect(), child: const Text('断开')),
-                    OutlinedButton(onPressed: () => ble.requestTestTone(), child: const Text('1 秒测试音')),
+                    OutlinedButton(onPressed: () => ble.disconnect(), child: Text(l10n.disconnect)),
+                    OutlinedButton(onPressed: () => ble.requestTestTone(), child: Text(l10n.testTone)),
                     _SoftPtt(ble: ble),
                   ],
                 ),
@@ -126,10 +130,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
           ),
         ),
         const SizedBox(height: 20),
-        Text('虚拟麦克风', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.virtualMic, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
-          '伴侣写入下方「播放设备」；微信/输入法请选择对应的 CABLE Output 作为麦克风。',
+          l10n.virtualMicHint,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 10),
@@ -151,29 +155,29 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         await widget.settings.save();
                         setState(() {});
                       },
-                      hintText: '选择 CABLE Input / 回环设备',
+                      hintText: l10n.selectLoopback,
                       width: double.infinity,
                     ),
             ),
             IconButton(
-              tooltip: '刷新设备',
+              tooltip: l10n.refreshDevices,
               onPressed: _refreshDevices,
               icon: const Icon(Icons.refresh),
             ),
           ],
         ),
         const SizedBox(height: 20),
-        Text('语音修饰键', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.voiceModifier, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 6),
         Text(
-          'PTT 按下时注入，用于触发输入法语音（Windows 微信输入法默认 Ctrl+Win）。',
+          l10n.voiceModifierHint,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         DropdownMenu<VoiceModifier>(
           initialSelection: widget.injector.voiceModifier,
           dropdownMenuEntries: VoiceModifier.values
-              .map((m) => DropdownMenuEntry(value: m, label: m.labelZh))
+              .map((m) => DropdownMenuEntry(value: m, label: voiceModifierLabel(l10n, m)))
               .toList(),
           onSelected: (m) async {
             if (m == null) return;
@@ -187,7 +191,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
         ),
         const SizedBox(height: 20),
         Text(
-          '增益 ${widget.settings.gain.toStringAsFixed(1)}×',
+          l10n.gain(widget.settings.gain.toStringAsFixed(1)),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         Slider(
@@ -209,15 +213,19 @@ class _ConnectionPageState extends State<ConnectionPage> {
           builder: (_, c, __) {
             if (c == null) return const SizedBox.shrink();
             return Text(
-              '设备能力：协议 v${c.version} · ${c.sampleRateHz} Hz · '
-              '${c.buttonCount} 键 · 触控板=${c.hasTouchpad ? "有" : "无"}',
+              l10n.deviceCaps(
+                c.version,
+                c.sampleRateHz,
+                c.buttonCount,
+                c.hasTouchpad ? l10n.yes : l10n.no,
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             );
           },
         ),
         if (widget.settings.showScanDebug) ...[
           const SizedBox(height: 16),
-          Text('扫描调试', style: Theme.of(context).textTheme.titleSmall),
+          Text(l10n.scanDebug, style: Theme.of(context).textTheme.titleSmall),
           ValueListenableBuilder(
             valueListenable: ble.scanDebug,
             builder: (_, lines, __) => Container(
@@ -228,7 +236,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                lines.isEmpty ? '（无）' : lines.take(16).join('\n'),
+                lines.isEmpty ? l10n.empty : lines.take(16).join('\n'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'Consolas'),
               ),
             ),
@@ -245,6 +253,7 @@ class _SoftPtt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ValueListenableBuilder(
       valueListenable: ble.ptt,
       builder: (_, down, __) => Material(
@@ -259,7 +268,7 @@ class _SoftPtt extends StatelessWidget {
           onTapCancel: () => ble.softPtt(false),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Text(down ? '软件 PTT…' : '按住软件 PTT'),
+            child: Text(down ? l10n.softPttActive : l10n.softPtt),
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../ble/vibemic_ble.dart';
 import '../input/key_injector.dart';
+import '../l10n/l10n_ext.dart';
 import '../settings/app_settings.dart';
 import 'macros_page.dart';
 
@@ -60,7 +61,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           ValueListenableBuilder(
             valueListenable: ble.status,
-            builder: (_, status, __) => Text(status, style: Theme.of(context).textTheme.titleMedium),
+            builder: (_, status, __) => Text(
+              formatBleStatus(context.l10n, status),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: 8),
           ValueListenableBuilder(
@@ -138,7 +142,10 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 8),
           ValueListenableBuilder(
             valueListenable: ble.lastButton,
-            builder: (_, ev, __) => Text('Last key: $ev', style: Theme.of(context).textTheme.bodySmall),
+            builder: (_, ev, __) => Text(
+              context.l10n.lastKey(formatLastButton(context.l10n, ev)),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
           const SizedBox(height: 8),
           ValueListenableBuilder(

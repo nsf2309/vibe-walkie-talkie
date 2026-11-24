@@ -1,7 +1,8 @@
 /// Logical button IDs — mirrors `shared/vibemic_buttons.h`. PTT is separate.
 library;
 
-const int kButtonCount = 16;
+const int kMatrixKeyCount = 16;
+const int kButtonCount = 18;
 
 const int keyUp = 1;
 const int keyDown = 2;
@@ -19,12 +20,15 @@ const int keyF3 = 13;
 const int keyF4 = 14;
 const int keyF5 = 15;
 const int keyF6 = 16;
+const int keySqueezeVolDown = 17; // PTT + Vol-
+const int keySqueezeVolUp = 18; // PTT + Vol+
 
 class RemoteKeyInfo {
-  const RemoteKeyInfo(this.id, this.label, this.shortLabel);
+  const RemoteKeyInfo(this.id, this.label, this.shortLabel, {this.side = false});
   final int id;
   final String label;
   final String shortLabel;
+  final bool side;
 }
 
 const List<RemoteKeyInfo> kRemoteKeys = [
@@ -33,8 +37,8 @@ const List<RemoteKeyInfo> kRemoteKeys = [
   RemoteKeyInfo(keyLeft, '左', '←'),
   RemoteKeyInfo(keyRight, '右', '→'),
   RemoteKeyInfo(keyOk, '确认', 'OK'),
-  RemoteKeyInfo(keyVolUp, '音量+', 'Vol+'),
-  RemoteKeyInfo(keyVolDown, '音量−', 'Vol−'),
+  RemoteKeyInfo(keyVolUp, '音量+', 'Vol+', side: true),
+  RemoteKeyInfo(keyVolDown, '音量−', 'Vol−', side: true),
   RemoteKeyInfo(keyBack, '返回', 'Back'),
   RemoteKeyInfo(keyHome, 'Home', 'Home'),
   RemoteKeyInfo(keyMenu, '菜单', 'Menu'),
@@ -44,6 +48,8 @@ const List<RemoteKeyInfo> kRemoteKeys = [
   RemoteKeyInfo(keyF4, '功能4', 'F4'),
   RemoteKeyInfo(keyF5, '功能5', 'F5'),
   RemoteKeyInfo(keyF6, '功能6', 'F6'),
+  RemoteKeyInfo(keySqueezeVolDown, '捏合 PTT+Vol−', '捏−', side: true),
+  RemoteKeyInfo(keySqueezeVolUp, '捏合 PTT+Vol+', '捏+', side: true),
 ];
 
 RemoteKeyInfo? remoteKeyById(int id) {

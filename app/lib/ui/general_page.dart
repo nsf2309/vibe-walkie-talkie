@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../ble/vibemic_ble.dart';
+import '../l10n/l10n_ext.dart';
 import '../settings/app_settings.dart';
 
 class GeneralPage extends StatefulWidget {
@@ -21,22 +22,38 @@ class _GeneralPageState extends State<GeneralPage> {
   @override
   Widget build(BuildContext context) {
     final s = widget.settings;
+    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
       children: [
-        Text('通用', style: Theme.of(context).textTheme.headlineSmall),
+        Text(l10n.generalTitle, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 6),
         Text(
-          '对齐 SayAll「连接与语音 / 按键 / 设置」中的本机偏好。会员回眸、MCP、多方案按 App 切换等高级能力后续按需加。',
+          l10n.generalHint,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
         const SizedBox(height: 16),
+        Text(l10n.language, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        DropdownMenu<AppLanguage>(
+          initialSelection: s.language,
+          dropdownMenuEntries: AppLanguage.all
+              .map((lang) => DropdownMenuEntry(value: lang, label: lang.displayName(l10n)))
+              .toList(),
+          onSelected: (lang) async {
+            if (lang == null) return;
+            await s.setLanguage(lang);
+            setState(() {});
+          },
+          width: double.infinity,
+        ),
+        const SizedBox(height: 16),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('启动时自动扫描'),
-          subtitle: const Text('打开伴侣后自动寻找 VibeMic'),
+          title: Text(l10n.autoScan),
+          subtitle: Text(l10n.autoScanSub),
           value: s.autoScanOnLaunch,
           onChanged: (v) async {
             setState(() => s.autoScanOnLaunch = v);
@@ -45,8 +62,8 @@ class _GeneralPageState extends State<GeneralPage> {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('断线自动重连'),
-          subtitle: const Text('意外断开约 3 秒后重新扫描'),
+          title: Text(l10n.autoReconnect),
+          subtitle: Text(l10n.autoReconnectSub),
           value: s.autoReconnect,
           onChanged: (v) async {
             setState(() {
@@ -58,8 +75,8 @@ class _GeneralPageState extends State<GeneralPage> {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('显示扫描调试'),
-          subtitle: const Text('在「连接与语音」页列出附近 BLE 广播'),
+          title: Text(l10n.showScanDebug),
+          subtitle: Text(l10n.showScanDebugSub),
           value: s.showScanDebug,
           onChanged: (v) async {
             setState(() => s.showScanDebug = v);
@@ -67,21 +84,23 @@ class _GeneralPageState extends State<GeneralPage> {
           },
         ),
         const Divider(height: 32),
-        Text('使用提示', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.tipsTitle, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        const Text('1. 安装 VB-Audio Virtual Cable；伴侣选 CABLE Input，输入法选 CABLE Output。'),
+        Text(l10n.tip1),
         const SizedBox(height: 6),
-        const Text('2. 不要在 Windows「设置 → 蓝牙」里连接 VibeMic，只在本伴侣扫描。'),
+        Text(l10n.tip2),
         const SizedBox(height: 6),
-        const Text('3. INMP441 接线见仓库 docs/mic-inmp441.md；麦未焊时 PTT 为测试音。'),
+        Text(l10n.tip3),
         const SizedBox(height: 6),
-        const Text('4. 按键矩阵接线见 docs/keys-matrix.md（方向/OK/音量/返回/Home/菜单/F1–F6 + PTT）。'),
+        Text(l10n.tip4),
         const SizedBox(height: 6),
-        const Text('5. 多任务：Menu→Win+Tab，按住←/→切换，OK 确认；F1/F2/F3 = Agent 接受/拒绝/新建会话。'),
+        Text(l10n.tip5),
+        const SizedBox(height: 6),
+        Text(l10n.tip6),
         const Divider(height: 32),
-        Text('关于', style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.aboutTitle, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        const Text('VibeMic 伴侣 0.1.0 · ESP32-C3 自定义 BLE 音频 + HID 按键'),
+        Text(l10n.aboutBody),
       ],
     );
   }

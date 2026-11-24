@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../l10n/l10n_ext.dart';
 import '../macros/macro_models.dart';
 
 Future<MacroAction?> showActionEditSheet(
@@ -48,6 +49,7 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final types = MacroActionType.values.where((t) => t.category == category || t == MacroActionType.none).toList();
     return Padding(
       padding: EdgeInsets.only(
@@ -61,7 +63,8 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+            Text(widget.title.isEmpty ? l10n.editAction : widget.title,
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -69,7 +72,7 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
               children: [
                 for (final c in MacroActionCategory.values)
                   ChoiceChip(
-                    label: Text(c.labelZh),
+                    label: Text(categoryLabel(l10n, c)),
                     selected: category == c,
                     onSelected: (_) => setState(() {
                       category = c;
@@ -88,7 +91,7 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
                 children: [
                   for (final t in types)
                     ListTile(
-                      title: Text(t.labelZh),
+                      title: Text(actionLabel(l10n, t)),
                       leading: Icon(
                         type == t ? Icons.radio_button_checked : Icons.radio_button_off,
                         color: type == t ? Theme.of(context).colorScheme.primary : null,
@@ -96,19 +99,15 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
                       selected: type == t,
                       onTap: () => setState(() => type = t),
                     ),
-                  if (type == MacroActionType.keyShortcut)
+                  if (type == MacroActionType.keyShortcut || type == MacroActionType.holdShortcut)
                     TextField(
                       controller: keys,
-                      decoration: const InputDecoration(
-                        labelText: '快捷键（如 control+c 或 alt+f4）',
-                      ),
+                      decoration: InputDecoration(labelText: l10n.customShortcutHint),
                     ),
                   if (type == MacroActionType.openApp)
                     TextField(
                       controller: app,
-                      decoration: const InputDecoration(
-                        labelText: '应用 id 或 exe 名（如 wechat / chrome / notepad）',
-                      ),
+                      decoration: InputDecoration(labelText: l10n.customAppHint),
                     ),
                 ],
               ),
@@ -118,10 +117,10 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, MacroAction()),
-                  child: const Text('清除'),
+                  child: Text(l10n.clear),
                 ),
                 const Spacer(),
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+                TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: () {
@@ -138,7 +137,7 @@ class _ActionEditBodyState extends State<_ActionEditBody> {
                       ),
                     );
                   },
-                  child: const Text('保存'),
+                  child: Text(l10n.save),
                 ),
               ],
             ),

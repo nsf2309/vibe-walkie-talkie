@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../ble/vibemic_ble.dart';
 import '../input/key_injector.dart';
+import '../l10n/l10n_ext.dart';
 import '../settings/app_settings.dart';
 import 'connection_page.dart';
 import 'general_page.dart';
@@ -38,6 +39,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final pages = [
       ConnectionPage(ble: widget.ble, settings: widget.settings, injector: widget.injector),
       MappingPage(ble: widget.ble, settings: widget.settings),
@@ -57,25 +59,25 @@ class _AppShellState extends State<AppShell> {
                 children: [
                   Icon(Icons.mic_external_on, color: Theme.of(context).colorScheme.primary, size: 28),
                   const SizedBox(height: 4),
-                  Text('VibeMic', style: Theme.of(context).textTheme.labelLarge),
+                  Text(l10n.appTitle, style: Theme.of(context).textTheme.labelLarge),
                 ],
               ),
             ),
-            destinations: const [
+            destinations: [
               NavigationRailDestination(
-                icon: Icon(Icons.bluetooth_outlined),
-                selectedIcon: Icon(Icons.bluetooth_connected),
-                label: Text('连接与语音'),
+                icon: const Icon(Icons.bluetooth_outlined),
+                selectedIcon: const Icon(Icons.bluetooth_connected),
+                label: Text(l10n.navConnection),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.keyboard_alt_outlined),
-                selectedIcon: Icon(Icons.keyboard_alt),
-                label: Text('按键映射'),
+                icon: const Icon(Icons.keyboard_alt_outlined),
+                selectedIcon: const Icon(Icons.keyboard_alt),
+                label: Text(l10n.navMapping),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.tune_outlined),
-                selectedIcon: Icon(Icons.tune),
-                label: Text('通用'),
+                icon: const Icon(Icons.tune_outlined),
+                selectedIcon: const Icon(Icons.tune),
+                label: Text(l10n.navGeneral),
               ),
             ],
           ),

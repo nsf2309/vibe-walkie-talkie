@@ -1,0 +1,294 @@
+{
+  "@@locale": "en",
+  "appTitle": "VibeMic",
+  "navConnection": "Connection & Voice",
+  "navMapping": "Button Mapping",
+  "navGeneral": "General",
+  "connectionTitle": "Connection & Voice",
+  "connectionHint": "Hold the side PTT to talk; release to stop. Do not pair VibeMic in Windows Bluetooth settings.",
+  "connected": "Connected to VibeMic",
+  "notConnected": "Not connected",
+  "streaming": "Streaming",
+  "idle": "Idle",
+  "audioFrames": "Audio frames {count}",
+  "@audioFrames": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "lastKey": "Last key: {event}",
+  "@lastKey": {
+    "placeholders": {
+      "event": {"type": "String"}
+    }
+  },
+  "scanConnect": "Scan & connect",
+  "disconnect": "Disconnect",
+  "testTone": "1s test tone",
+  "softPtt": "Hold soft PTT",
+  "softPttActive": "Soft PTT…",
+  "virtualMic": "Virtual microphone",
+  "virtualMicHint": "The companion writes to the playback device below. In WeChat/IME, choose the matching CABLE Output as microphone.",
+  "selectLoopback": "Select CABLE Input / loopback",
+  "refreshDevices": "Refresh devices",
+  "voiceModifier": "Voice modifier",
+  "voiceModifierHint": "Injected while PTT is held to trigger IME voice (WeChat IME default: Ctrl+Win).",
+  "gain": "Gain {value}×",
+  "@gain": {
+    "placeholders": {
+      "value": {"type": "String"}
+    }
+  },
+  "deviceCaps": "Device: protocol v{version} · {rate} Hz · {buttons} keys · touchpad={touchpad}",
+  "@deviceCaps": {
+    "placeholders": {
+      "version": {"type": "int"},
+      "rate": {"type": "int"},
+      "buttons": {"type": "int"},
+      "touchpad": {"type": "String"}
+    }
+  },
+  "yes": "yes",
+  "no": "no",
+  "scanDebug": "Scan debug",
+  "empty": "(empty)",
+  "mappingTitle": "Button Mapping",
+  "mappingHint": "Layout: PTT on the left, volume on the right; front F4–F6, D-pad+OK, Home/Back/Menu, F1–F3. Squeeze: hold PTT+volume together; short/long press can bind screenshots and more.",
+  "enableMapping": "Enable button mapping",
+  "leftSide": "Left side",
+  "rightSide": "Right side",
+  "pttVoice": "PTT",
+  "liveEvent": "Live: {event}",
+  "@liveEvent": {
+    "placeholders": {
+      "event": {"type": "String"}
+    }
+  },
+  "keyId": "ID {id}",
+  "@keyId": {
+    "placeholders": {
+      "id": {"type": "int"}
+    }
+  },
+  "squeezeHint": "Squeeze: hold left PTT with the matching volume key. Short press fires Click; hold ≥0.6s fires Long. Voice streaming is skipped during squeeze.",
+  "actionHold": "Hold (recommended for arrows)",
+  "actionClick": "Click",
+  "actionDouble": "Double",
+  "actionLong": "Long press",
+  "actionSqueezeShort": "Short squeeze",
+  "actionSqueezeLong": "Long squeeze",
+  "resetDefaults": "Restore defaults",
+  "generalTitle": "General",
+  "generalHint": "Local preferences for connection, buttons, and settings. Advanced features can be added later.",
+  "language": "Language",
+  "languageSystem": "System default",
+  "autoScan": "Scan on launch",
+  "autoScanSub": "Automatically look for VibeMic when the companion starts",
+  "autoReconnect": "Auto-reconnect",
+  "autoReconnectSub": "Rescan about 3 seconds after an unexpected disconnect",
+  "showScanDebug": "Show scan debug",
+  "showScanDebugSub": "List nearby BLE ads on the Connection page",
+  "tipsTitle": "Tips",
+  "tip1": "1. Install VB-Audio Virtual Cable; pick CABLE Input here and CABLE Output in your IME.",
+  "tip2": "2. Do not connect VibeMic in Windows Bluetooth settings—only scan in this app.",
+  "tip3": "3. INMP441 wiring: docs/mic-inmp441.md. Without the mic, PTT plays a test tone.",
+  "tip4": "4. Key matrix wiring: docs/keys-matrix.md.",
+  "tip5": "5. Multitasking: Menu → Win+Tab, hold ←/→ to switch, OK to confirm; F1/F2/F3 = agent accept/reject/new session.",
+  "tip6": "6. Squeeze: PTT+Vol− short = full screenshot / long = WeChat snip; PTT+Vol+ short = window / long = Snipping Tool.",
+  "aboutTitle": "About",
+  "aboutBody": "VibeMic companion 0.1.0 · ESP32-C3 custom BLE audio + HID keys",
+  "editAction": "Edit action",
+  "clear": "Clear",
+  "cancel": "Cancel",
+  "save": "Save",
+  "customShortcutHint": "Shortcut (e.g. control+c or alt+f4)",
+  "customAppHint": "App id or exe (e.g. wechat / chrome / notepad)",
+  "catBasic": "Basic keys",
+  "catEditing": "Editing",
+  "catMedia": "System & media",
+  "catAgent": "Cursor / Codex",
+  "catApps": "Open apps",
+  "catCustom": "Custom",
+  "actionNone": "None",
+  "actionKeyShortcut": "Custom shortcut",
+  "actionHoldShortcut": "Hold shortcut",
+  "actionOpenApp": "Open app…",
+  "actionCombination": "Combination",
+  "actionMediaPlayPause": "Play/Pause",
+  "actionVolumeUp": "Volume +",
+  "actionVolumeDown": "Volume −",
+  "actionMute": "Mute",
+  "actionMediaNext": "Next track",
+  "actionMediaPrev": "Previous track",
+  "actionTaskView": "Task view (Win+Tab)",
+  "actionScreenshotFull": "Full-screen screenshot (PrtSc)",
+  "actionScreenshotWindow": "Active window screenshot (Alt+PrtSc)",
+  "actionScreenshotWechat": "WeChat screenshot (Alt+A)",
+  "actionScreenshotSnip": "Snipping Tool (Win+Shift+S)",
+  "actionEscape": "Esc",
+  "actionEnter": "Enter / OK",
+  "actionCopy": "Copy",
+  "actionPaste": "Paste",
+  "actionCut": "Cut",
+  "actionSelectAll": "Select all",
+  "actionUndo": "Undo",
+  "actionRedo": "Redo",
+  "actionFind": "Find",
+  "actionSave": "Save",
+  "actionCloseWindow": "Close window",
+  "actionNewTab": "New tab",
+  "actionPrevTab": "Previous tab",
+  "actionNextTab": "Next tab",
+  "actionArrowUp": "↑ (holdable)",
+  "actionArrowDown": "↓ (holdable)",
+  "actionArrowLeft": "← (holdable)",
+  "actionArrowRight": "→ (holdable)",
+  "actionPageUp": "Page Up",
+  "actionPageDown": "Page Down",
+  "actionHome": "Home",
+  "actionEnd": "End",
+  "actionDelete": "Delete",
+  "actionBackspace": "Backspace",
+  "actionAgentAccept": "Agent accept (Ctrl+Enter)",
+  "actionAgentReject": "Agent reject (Esc)",
+  "actionAgentNewSession": "Agent new session (Ctrl+L)",
+  "actionOpenWeChat": "Open WeChat",
+  "actionOpenCursor": "Open Cursor",
+  "actionOpenCodex": "Open Codex / ChatGPT",
+  "actionOpenChrome": "Open Chrome",
+  "actionOpenEdge": "Open Edge",
+  "actionOpenNotepad": "Open Notepad",
+  "actionOpenExplorer": "Open File Explorer",
+  "descShortcut": "Shortcut: {keys}",
+  "@descShortcut": {
+    "placeholders": {
+      "keys": {"type": "String"}
+    }
+  },
+  "descHold": "Hold: {keys}",
+  "@descHold": {
+    "placeholders": {
+      "keys": {"type": "String"}
+    }
+  },
+  "descOpen": "Open: {app}",
+  "@descOpen": {
+    "placeholders": {
+      "app": {"type": "String"}
+    }
+  },
+  "descCombinationEmpty": "Combination (empty)",
+  "descCombination": "Combo: {steps}",
+  "@descCombination": {
+    "placeholders": {
+      "steps": {"type": "String"}
+    }
+  },
+  "modNone": "None (virtual mic only)",
+  "modFn": "Fn / Globe (macOS)",
+  "modLeftControl": "Left Ctrl",
+  "modRightControl": "Right Ctrl",
+  "modLeftAlt": "Left Alt",
+  "modRightAlt": "Right Alt",
+  "modLeftMeta": "Win / Cmd",
+  "modRightMeta": "Right Win / Cmd",
+  "modCtrlWin": "Ctrl + Win (WeChat IME)",
+  "keyUp": "Up",
+  "keyDown": "Down",
+  "keyLeft": "Left",
+  "keyRight": "Right",
+  "keyOk": "OK",
+  "keyVolUp": "Volume +",
+  "keyVolDown": "Volume −",
+  "keyBack": "Back",
+  "keyHome": "Home",
+  "keyMenu": "Menu",
+  "keyF1": "F1",
+  "keyF2": "F2",
+  "keyF3": "F3",
+  "keyF4": "F4",
+  "keyF5": "F5",
+  "keyF6": "F6",
+  "keySqueezeVolDown": "Squeeze PTT+Vol−",
+  "keySqueezeVolUp": "Squeeze PTT+Vol+",
+  "keyShortVolUp": "Vol+",
+  "keyShortVolDown": "Vol−",
+  "keyShortSqueezeVolUp": "⊕+",
+  "keyShortSqueezeVolDown": "⊕−",
+  "statusIdle": "Idle",
+  "statusCheckingBluetooth": "Checking Bluetooth…",
+  "statusUnsupported": "Bluetooth not supported on this PC",
+  "statusKnownConnecting": "Known device found, connecting…",
+  "statusScanning": "Scanning {seconds}s…",
+  "@statusScanning": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "statusScanningSeen": "Scanning… seen {count} device(s)",
+  "@statusScanningSeen": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "statusNoDevices": "Found 0 devices. Check Windows Bluetooth, or confirm the board is advertising with nRF Connect.",
+  "statusNotFound": "VibeMic not found in {count} ads. Sample: {sample}",
+  "@statusNotFound": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "sample": {"type": "String"}
+    }
+  },
+  "statusFoundConnecting": "Found VibeMic, connecting…",
+  "statusAdapterTimeout": "Bluetooth adapter timed out",
+  "statusScanFailed": "Scan failed: {error}",
+  "@statusScanFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "statusConnecting": "Connecting to {name}…",
+  "@statusConnecting": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "statusConnectFailed": "Connect failed: {error} — unpair in Windows, press RST, then retry",
+  "@statusConnectFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "statusDisconnected": "Disconnected",
+  "statusMissingGatt": "Missing VibeMic GATT characteristics",
+  "statusConnectedReady": "Connected — hold PTT to talk",
+  "statusReconnecting": "Reconnecting…",
+  "statusNotConnected": "Not connected",
+  "statusTestTone": "Test tone {ms}ms…",
+  "@statusTestTone": {
+    "placeholders": {
+      "ms": {"type": "int"}
+    }
+  },
+  "statusDeviceNack": "Device NACK",
+  "statusPttStreaming": "PTT streaming…",
+  "btnEventUp": "up",
+  "btnEventDown": "down",
+  "btnEventClick": "click",
+  "btnEventDouble": "double",
+  "btnEventLong": "long",
+  "lastKeyDetail": "Key {id} · {event}",
+  "@lastKeyDetail": {
+    "placeholders": {
+      "id": {"type": "int"},
+      "event": {"type": "String"}
+    }
+  },
+  "langEnglish": "English",
+  "langSimplifiedChinese": "简体中文",
+  "langTraditionalChinese": "繁體中文",
+  "langJapanese": "日本語",
+  "langFrench": "Français",
+  "langSpanish": "Español",
+  "langArabic": "العربية"
+}

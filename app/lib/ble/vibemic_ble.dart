@@ -8,6 +8,9 @@ import '../audio/virtual_mic.dart';
 import '../input/key_injector.dart';
 import '../macros/macro_models.dart';
 import '../protocol/vibemic_protocol.dart';
+import 'ble_ui_status.dart';
+
+export 'ble_ui_status.dart';
 
 class VibeMicBle {
   VibeMicBle({
@@ -25,13 +28,13 @@ class VibeMicBle {
   bool autoReconnect;
 
   final ImaAdpcmDecoder _adpcm = ImaAdpcmDecoder();
-  final ValueNotifier<String> status = ValueNotifier('空闲');
+  final ValueNotifier<BleUiStatus> status = ValueNotifier(BleUiStatus.idle);
   final ValueNotifier<bool> connected = ValueNotifier(false);
   final ValueNotifier<bool> ptt = ValueNotifier(false);
   final ValueNotifier<DeviceCaps?> caps = ValueNotifier(null);
   final ValueNotifier<double> level = ValueNotifier(0);
   final ValueNotifier<int> frames = ValueNotifier(0);
-  final ValueNotifier<String> lastButton = ValueNotifier('—');
+  final ValueNotifier<LastButtonEvent?> lastButton = ValueNotifier(null);
   /// Live scan debug lines for the UI / console.
   final ValueNotifier<List<String>> scanDebug = ValueNotifier(const []);
 
@@ -69,9 +72,9 @@ class VibeMicBle {
     return _nameMatch(adv) || _nameMatch(platform) || hasSvc || _hasVmMfg(r.advertisementData);
   }
 
-  void _log(String msg) {
-    debugPrint('[VibeMicBle] $msg');
-    status.value = msg;
+  void _setStatus(BleUiStatus next) {
+    debugPrint('[VibeMicBle] ${next.code.name}${next.n != null ? " n=${next.n}" : ""}${next.s != null ? " s=${next.s}" : ""}');
+    status.value = next;
   }
 
   Future<BluetoothDevice?> _findAlreadyKnown() async {
@@ -110,9 +113,9 @@ class VibeMicBle {
     _reconnectTimer?.cancel();
     scanDebug.value = const [];
     try {
-      _log('检查蓝牙…');
+      _setStatus(BleUiStatus.checkingBluetooth);
       if (!await FlutterBluePlus.isSupported) {
-        _log('本机不支持蓝牙');
+        _setStatus(BleUiStatus.unsupported);
         return;
       }
 
@@ -124,7 +127,7 @@ class VibeMicBle {
 
       final known = await _findAlreadyKnown();
       if (known != null) {
-        _log('发现已知设备，连接中…');
+        _setStatus(BleUiStatus.knownConnecting);
         await connect(known);
         return;
       }
@@ -135,7 +138,7 @@ class VibeMicBle {
         await Future<void>.delayed(const Duration(milliseconds: 400));
       } catch (_) {}
 
-      _log('扫描中 ${timeout.inSeconds}s…');
+      _setStatus(BleUiStatus(BleStatusCode.scanning, n: timeout.inSeconds));
       final seen = <String, String>{}; // id -> label
       final logged = <String>{};
       final match = Completer<BluetoothDevice>();
@@ -159,8 +162,8 @@ class VibeMicBle {
         }
         final lines = seen.values.toList()..sort();
         scanDebug.value = lines;
-        if (status.value.startsWith('扫描')) {
-          status.value = '扫描中… 已见 ${seen.length} 台设备';
+        if (status.value.isScanning) {
+          _setStatus(BleUiStatus(BleStatusCode.scanningSeen, n: seen.length));
         }
       }, onError: (e) {
         debugPrint('[VibeMicBle] scanResults error: $e');
@@ -199,21 +202,21 @@ class VibeMicBle {
           return;
         }
         final sample = seen.values.take(8).join(' | ');
-        _log(
-          seen.isEmpty
-              ? '扫描到 0 台设备。请检查 Windows 蓝牙，或用手机 nRF Connect 确认板子在广播。'
-              : '在 ${seen.length} 条广播中未找到 VibeMic。样例: $sample',
-        );
+        if (seen.isEmpty) {
+          _setStatus(BleUiStatus.noDevices);
+        } else {
+          _setStatus(BleUiStatus(BleStatusCode.notFound, n: seen.length, s: sample));
+        }
         return;
       }
 
-      _log('找到 VibeMic，连接中…');
+      _setStatus(BleUiStatus.foundConnecting);
       await connect(found);
     } on TimeoutException {
-      _log('蓝牙适配器超时');
+      _setStatus(BleUiStatus.adapterTimeout);
     } catch (e, st) {
       debugPrint('[VibeMicBle] scan failed: $e\n$st');
-      _log('扫描失败: $e');
+      _setStatus(BleUiStatus(BleStatusCode.scanFailed, s: '$e'));
     } finally {
       _busy = false;
     }
@@ -221,7 +224,7 @@ class VibeMicBle {
 
   Future<void> connect(BluetoothDevice device) async {
     final label = device.platformName.isEmpty ? device.remoteId.str : device.platformName;
-    _log('正在连接 $label…');
+    _setStatus(BleUiStatus(BleStatusCode.connecting, s: label));
     await _audioSub?.cancel();
     await _ctrlSub?.cancel();
     await _connSub?.cancel();
@@ -231,7 +234,7 @@ class VibeMicBle {
     try {
       await device.connect(license: License.nonprofit, autoConnect: false, timeout: const Duration(seconds: 25));
     } catch (e) {
-      _log('连接失败: $e — 请在 Windows 取消配对，按 RST 后重试');
+      _setStatus(BleUiStatus(BleStatusCode.connectFailed, s: '$e'));
       rethrow;
     }
 
@@ -239,7 +242,7 @@ class VibeMicBle {
     _connSub = device.connectionState.listen((s) {
       connected.value = s == BluetoothConnectionState.connected;
       if (!connected.value) {
-        _log('已断开');
+        _setStatus(BleUiStatus.disconnected);
         unawaited(_teardownSession());
         _scheduleReconnect();
       }
@@ -261,7 +264,7 @@ class VibeMicBle {
       }
     }
     if (_cmd == null || _audio == null || _ctrl == null) {
-      _log('缺少 VibeMic GATT 特征');
+      _setStatus(BleUiStatus.missingGatt);
       return;
     }
 
@@ -273,7 +276,7 @@ class VibeMicBle {
     await _cmd!.write([cmdGetCaps], withoutResponse: false);
     await _cmd!.write([cmdSetMode, modeLive], withoutResponse: false);
     await _cmd!.write([cmdSetTouchpad, tpAudioPriority], withoutResponse: false);
-    _log('已连接 — 按住 PTT 说话');
+    _setStatus(BleUiStatus.connectedReady);
   }
 
   Future<void> disconnect() async {
@@ -287,7 +290,7 @@ class VibeMicBle {
       await _device?.disconnect();
     } catch (_) {}
     connected.value = false;
-    _log('空闲');
+    _setStatus(BleUiStatus.idle);
   }
 
   void _scheduleReconnect() {
@@ -295,23 +298,23 @@ class VibeMicBle {
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 3), () {
       if (_userDisconnect || connected.value || _busy) return;
-      _log('自动重连中…');
+      _setStatus(BleUiStatus.reconnecting);
       unawaited(startScanAndConnect());
     });
   }
 
   Future<void> requestTestTone([int ms = 1000]) async {
     if (_cmd == null) {
-      _log('未连接');
+      _setStatus(BleUiStatus.notConnected);
       return;
     }
     await mic.beginSession();
     await _cmd!.write([cmdTestTone, ms & 0xff, (ms >> 8) & 0xff], withoutResponse: false);
-    _log('测试音 ${ms}ms…');
+    _setStatus(BleUiStatus(BleStatusCode.testTone, n: ms));
     Future<void>.delayed(Duration(milliseconds: ms + 200), () async {
       if (!ptt.value) {
         await mic.endSession();
-        if (connected.value) _log('已连接 — 按住 PTT 说话');
+        if (connected.value) _setStatus(BleUiStatus.connectedReady);
       }
     });
   }
@@ -332,7 +335,7 @@ class VibeMicBle {
         _adpcm.reset();
         break;
       case ctrlNack:
-        _log('设备 NACK');
+        _setStatus(BleUiStatus.deviceNack);
         break;
     }
   }
@@ -344,26 +347,19 @@ class VibeMicBle {
       frames.value = 0;
       await mic.beginSession();
       await injector.voiceSessionBegin();
-      _log('PTT 推流中…');
+      _setStatus(BleUiStatus.pttStreaming);
     } else {
       await mic.endSession();
       await injector.voiceSessionEnd();
       level.value = 0;
-      if (connected.value) _log('已连接 — 按住 PTT 说话');
+      if (connected.value) _setStatus(BleUiStatus.connectedReady);
     }
   }
 
   Future<void> softPtt(bool down) => _onPtt(down);
 
   Future<void> _onButton(int id, int event) async {
-    const names = {
-      btnUp: '抬起',
-      btnDown: '按下',
-      btnClick: '单击',
-      btnDouble: '双击',
-      btnLong: '长按',
-    };
-    lastButton.value = '按键 $id · ${names[event] ?? event}';
+    lastButton.value = LastButtonEvent(id, event);
     debugPrint('[VibeMicBle] button $id event $event');
 
     if (!mappingEnabled) return;

@@ -80,6 +80,9 @@ WORD VkFromName(const std::string& raw) {
   if (name == "volumeup") return VK_VOLUME_UP;
   if (name == "volumedown") return VK_VOLUME_DOWN;
   if (name == "volumemute" || name == "mute") return VK_VOLUME_MUTE;
+  if (name == "printscreen" || name == "prtsc" || name == "prtscr" || name == "snapshot") {
+    return VK_SNAPSHOT;
+  }
   if (name.size() >= 2 && name[0] == 'f') {
     bool digits = true;
     for (size_t i = 1; i < name.size(); i++) {

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'audio/virtual_mic.dart';
 import 'ble/vibemic_ble.dart';
 import 'input/key_injector.dart';
+import 'l10n/l10n_ext.dart';
 import 'macros/macro_models.dart';
 import 'settings/app_settings.dart';
 import 'ui/app_shell.dart';
@@ -52,17 +53,45 @@ class VibeMicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'VibeMic',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F5B), brightness: Brightness.light),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F5B), brightness: Brightness.dark),
-        useMaterial3: true,
-      ),
-      home: AppShell(ble: ble, settings: settings, injector: injector),
+    return ValueListenableBuilder<int>(
+      valueListenable: settings.localeEpoch,
+      builder: (_, __, ___) {
+        final lang = settings.language;
+        return MaterialApp(
+          onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
+          locale: lang.locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: <LocalizationsDelegate<dynamic>>[
+            AppLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          localeResolutionCallback: (device, supported) {
+            if (lang.locale != null) return lang.locale;
+            if (device == null) return const Locale('en');
+            for (final l in supported) {
+              if (l.languageCode == device.languageCode &&
+                  (l.countryCode == null ||
+                      l.countryCode!.isEmpty ||
+                      l.countryCode == device.countryCode)) {
+                return l;
+              }
+            }
+            for (final l in supported) {
+              if (l.languageCode == device.languageCode) return l;
+            }
+            return const Locale('en');
+          },
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F5B), brightness: Brightness.light),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F5B), brightness: Brightness.dark),
+            useMaterial3: true,
+          ),
+          home: AppShell(ble: ble, settings: settings, injector: injector),
+        );
+      },
     );
   }
 }

@@ -14,6 +14,8 @@
 #define REARM_US              20000
 #define LONG_PRESS_US         600000
 #define DOUBLE_CLICK_US       350000
+/* Wait before starting voice so PTT+Vol squeeze can win. */
+#define PTT_ARM_US            150000
 
 typedef struct {
     uint8_t id;
@@ -30,14 +32,15 @@ static vibemic_ptt_cb_t s_ptt_cb;
 static vibemic_button_cb_t s_btn_cb;
 static void *s_user;
 static key_state_t s_ptt;
-static key_state_t s_keys[VIBEMIC_BUTTON_COUNT];
+static key_state_t s_keys[VIBEMIC_MATRIX_KEY_COUNT];
 
-/* 4x5 matrix -> logical key id (0 = unused spare). */
+/* Physical layout (front): F4-F6 top, D-pad, Home/Back/Menu, F1-F3 bottom.
+ * Sides: PTT (dedicated GPIO), Vol+/- (matrix, right side). */
 static const uint8_t s_matrix_map[PIN_MX_ROWS][PIN_MX_COLS] = {
-    { VIBEMIC_KEY_UP,   VIBEMIC_KEY_LEFT, VIBEMIC_KEY_RIGHT, VIBEMIC_KEY_DOWN, VIBEMIC_KEY_OK },
-    { VIBEMIC_KEY_VOL_UP, VIBEMIC_KEY_VOL_DOWN, VIBEMIC_KEY_BACK, VIBEMIC_KEY_HOME, VIBEMIC_KEY_MENU },
-    { VIBEMIC_KEY_F1, VIBEMIC_KEY_F2, VIBEMIC_KEY_F3, VIBEMIC_KEY_F4, VIBEMIC_KEY_F5 },
-    { VIBEMIC_KEY_F6, 0, 0, 0, 0 },
+    { VIBEMIC_KEY_UP, VIBEMIC_KEY_LEFT, VIBEMIC_KEY_RIGHT, VIBEMIC_KEY_DOWN, VIBEMIC_KEY_OK },
+    { VIBEMIC_KEY_HOME, VIBEMIC_KEY_BACK, VIBEMIC_KEY_MENU, VIBEMIC_KEY_VOL_UP, VIBEMIC_KEY_VOL_DOWN },
+    { VIBEMIC_KEY_F4, VIBEMIC_KEY_F5, VIBEMIC_KEY_F6, 0, 0 },
+    { VIBEMIC_KEY_F1, VIBEMIC_KEY_F2, VIBEMIC_KEY_F3, 0, 0 },
 };
 
 static const int s_rows[PIN_MX_ROWS] = {
@@ -46,6 +49,14 @@ static const int s_rows[PIN_MX_ROWS] = {
 static const int s_cols[PIN_MX_COLS] = {
     PIN_MX_COL0, PIN_MX_COL1, PIN_MX_COL2, PIN_MX_COL3, PIN_MX_COL4,
 };
+
+/* Squeeze / PTT arm state */
+static bool s_ptt_pending;       /* down seen, voice not started yet */
+static bool s_ptt_live;          /* voice session active */
+static bool s_squeeze_active;
+static uint8_t s_squeeze_vol_id; /* VOL_UP or VOL_DOWN */
+static int64_t s_squeeze_since_us;
+static bool s_suppress_vol[2];   /* [0]=vol_up [1]=vol_down: skip click/long after squeeze */
 
 static void cfg_input_pullup(int pin)
 {
@@ -107,16 +118,86 @@ static void emit_btn(uint8_t id, uint8_t event)
     }
 }
 
-static void on_key_edge(key_state_t *k, bool pressed, int64_t now)
+static int vol_suppress_index(uint8_t id)
 {
+    if (id == VIBEMIC_KEY_VOL_UP) {
+        return 0;
+    }
+    if (id == VIBEMIC_KEY_VOL_DOWN) {
+        return 1;
+    }
+    return -1;
+}
+
+static uint8_t squeeze_id_for_vol(uint8_t vol_id)
+{
+    return (vol_id == VIBEMIC_KEY_VOL_UP) ? VIBEMIC_KEY_SQUEEZE_VOL_UP : VIBEMIC_KEY_SQUEEZE_VOL_DOWN;
+}
+
+static void begin_squeeze(uint8_t vol_id, int64_t now)
+{
+    if (s_ptt_live) {
+        s_ptt_live = false;
+        if (s_ptt_cb) {
+            s_ptt_cb(false, s_user);
+        }
+    }
+    s_ptt_pending = false;
+    s_squeeze_active = true;
+    s_squeeze_vol_id = vol_id;
+    s_squeeze_since_us = now;
+    const int si = vol_suppress_index(vol_id);
+    if (si >= 0) {
+        s_suppress_vol[si] = true;
+    }
+}
+
+static void end_squeeze(int64_t now)
+{
+    if (!s_squeeze_active) {
+        return;
+    }
+    const uint8_t sid = squeeze_id_for_vol(s_squeeze_vol_id);
+    const bool is_long = (now - s_squeeze_since_us) >= LONG_PRESS_US;
+    emit_btn(sid, is_long ? VIBEMIC_BTN_LONG : VIBEMIC_BTN_CLICK);
+    s_squeeze_active = false;
+    s_squeeze_vol_id = 0;
+}
+
+static void on_matrix_key_edge(key_state_t *k, bool pressed, int64_t now)
+{
+    const bool is_vol = (k->id == VIBEMIC_KEY_VOL_UP || k->id == VIBEMIC_KEY_VOL_DOWN);
+    const bool ptt_held = s_ptt.stable || s_ptt_pending || s_ptt_live;
+
+    if (is_vol && pressed && ptt_held && !s_squeeze_active) {
+        begin_squeeze(k->id, now);
+        /* Still record DOWN for diagnostics but host mapping ignores vol during squeeze. */
+        emit_btn(k->id, VIBEMIC_BTN_DOWN);
+        return;
+    }
+
+    if (is_vol && !pressed && s_squeeze_active && s_squeeze_vol_id == k->id) {
+        emit_btn(k->id, VIBEMIC_BTN_UP);
+        end_squeeze(now);
+        return;
+    }
+
     if (pressed) {
         k->down_us = now;
         emit_btn(k->id, VIBEMIC_BTN_DOWN);
         return;
     }
 
-    const int64_t held = now - k->down_us;
     emit_btn(k->id, VIBEMIC_BTN_UP);
+
+    const int si = vol_suppress_index(k->id);
+    if (si >= 0 && s_suppress_vol[si]) {
+        s_suppress_vol[si] = false;
+        k->click_count = 0;
+        return; /* swallow click/long — squeeze already emitted */
+    }
+
+    const int64_t held = now - k->down_us;
     if (held >= LONG_PRESS_US) {
         emit_btn(k->id, VIBEMIC_BTN_LONG);
         k->click_count = 0;
@@ -137,16 +218,74 @@ static void on_key_edge(key_state_t *k, bool pressed, int64_t now)
     }
 }
 
+static void on_ptt_edge(bool pressed, int64_t now)
+{
+    if (pressed) {
+        if (s_squeeze_active) {
+            return;
+        }
+        /* If a vol key is already held, this is an immediate squeeze. */
+        if (s_keys[VIBEMIC_KEY_VOL_UP - 1].stable) {
+            begin_squeeze(VIBEMIC_KEY_VOL_UP, now);
+            return;
+        }
+        if (s_keys[VIBEMIC_KEY_VOL_DOWN - 1].stable) {
+            begin_squeeze(VIBEMIC_KEY_VOL_DOWN, now);
+            return;
+        }
+        s_ptt_pending = true;
+        s_ptt.down_us = now;
+        return;
+    }
+
+    /* PTT released */
+    if (s_squeeze_active) {
+        end_squeeze(now);
+        s_ptt_pending = false;
+        return;
+    }
+    if (s_ptt_pending) {
+        s_ptt_pending = false;
+        return; /* released before arm — no voice */
+    }
+    if (s_ptt_live) {
+        s_ptt_live = false;
+        if (s_ptt_cb) {
+            s_ptt_cb(false, s_user);
+        }
+    }
+}
+
+static void arm_ptt_if_needed(int64_t now)
+{
+    if (!s_ptt_pending || s_squeeze_active || s_ptt_live) {
+        return;
+    }
+    if ((now - s_ptt.down_us) < PTT_ARM_US) {
+        return;
+    }
+    s_ptt_pending = false;
+    s_ptt_live = true;
+    if (s_ptt_cb) {
+        s_ptt_cb(true, s_user);
+    }
+}
+
 void vibemic_keys_init(vibemic_ptt_cb_t ptt_cb, vibemic_button_cb_t btn_cb, void *user)
 {
     s_ptt_cb = ptt_cb;
     s_btn_cb = btn_cb;
     s_user = user;
+    s_ptt_pending = false;
+    s_ptt_live = false;
+    s_squeeze_active = false;
+    s_squeeze_vol_id = 0;
+    s_suppress_vol[0] = s_suppress_vol[1] = false;
 
     cfg_input_pullup(PIN_PTT);
     key_reset(&s_ptt, 0);
 
-    for (int i = 0; i < VIBEMIC_BUTTON_COUNT; i++) {
+    for (int i = 0; i < VIBEMIC_MATRIX_KEY_COUNT; i++) {
         key_reset(&s_keys[i], (uint8_t)(i + 1));
     }
 
@@ -164,12 +303,12 @@ void vibemic_keys_init(vibemic_ptt_cb_t ptt_cb, vibemic_button_cb_t btn_cb, void
 
 bool vibemic_keys_ptt_down(void)
 {
-    return s_ptt.stable;
+    return s_ptt_live || s_ptt_pending || s_ptt.stable;
 }
 
 static key_state_t *key_by_id(uint8_t id)
 {
-    if (id >= 1 && id <= VIBEMIC_BUTTON_COUNT) {
+    if (id >= 1 && id <= VIBEMIC_MATRIX_KEY_COUNT) {
         return &s_keys[id - 1];
     }
     return NULL;
@@ -177,13 +316,12 @@ static key_state_t *key_by_id(uint8_t id)
 
 static void scan_matrix(int64_t now)
 {
-    bool pressed_now[VIBEMIC_BUTTON_COUNT + 1] = {0};
+    bool pressed_now[VIBEMIC_MATRIX_KEY_COUNT + 1] = {0};
 
     for (int r = 0; r < PIN_MX_ROWS; r++) {
         for (int rr = 0; rr < PIN_MX_ROWS; rr++) {
             gpio_set_level(s_rows[rr], rr == r ? 0 : 1);
         }
-        /* settle */
         esp_rom_delay_us(5);
         for (int c = 0; c < PIN_MX_COLS; c++) {
             const uint8_t id = s_matrix_map[r][c];
@@ -199,14 +337,14 @@ static void scan_matrix(int64_t now)
         gpio_set_level(s_rows[rr], 1);
     }
 
-    for (uint8_t id = 1; id <= VIBEMIC_BUTTON_COUNT; id++) {
+    for (uint8_t id = 1; id <= VIBEMIC_MATRIX_KEY_COUNT; id++) {
         key_state_t *k = key_by_id(id);
         if (!k) {
             continue;
         }
         bool pressed = false;
         if (debounce_step(k, pressed_now[id], now, &pressed)) {
-            on_key_edge(k, pressed, now);
+            on_matrix_key_edge(k, pressed, now);
         }
     }
 }
@@ -217,10 +355,8 @@ void vibemic_keys_poll(void)
     bool pressed = false;
 
     if (debounce_step(&s_ptt, gpio_get_level(PIN_PTT) == 0, now, &pressed)) {
-        if (s_ptt_cb) {
-            s_ptt_cb(pressed, s_user);
-        }
+        on_ptt_edge(pressed, now);
     }
-
+    arm_ptt_if_needed(now);
     scan_matrix(now);
 }

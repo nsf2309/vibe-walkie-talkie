@@ -25,7 +25,7 @@ idf.py -p COMx flash monitor
 | Touchpad I2C SDA | GPIO8 | GPIO21 |
 | Touchpad I2C SCL | GPIO9 | GPIO22 |
 
-按键为 **4×5 矩阵**（方向/OK/音量/返回/Home/菜单 + F1–F6），详见 [`../docs/keys-matrix.md`](../docs/keys-matrix.md)。PTT 独立，active-low 接 GND。
+按键为 **4×5 矩阵** + 独立 PTT；产品布局为左侧 PTT、右侧音量、正面 F4–F6 / 方向+OK / Home·返回·菜单 / F1–F3。支持 **PTT+音量捏合** 截图手势。详见 [`../docs/keys-matrix.md`](../docs/keys-matrix.md)。
 
 麦克风接线见 [`../docs/mic-inmp441.md`](../docs/mic-inmp441.md)。
 
