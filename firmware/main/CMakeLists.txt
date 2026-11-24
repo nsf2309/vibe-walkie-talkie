@@ -1,0 +1,19 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "vibemic_adpcm.c"
+        "vibemic_audio.c"
+        "vibemic_ble.c"
+        "vibemic_hid.c"
+        "vibemic_keys.c"
+        "vibemic_touchpad.c"
+    INCLUDE_DIRS
+        "."
+        "../../shared"
+    REQUIRES
+        nvs_flash
+        bt
+        driver
+        esp_driver_i2s
+        esp_timer
+)

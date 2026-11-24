@@ -1,0 +1,24 @@
+menu "VibeMic"
+
+config VIBEMIC_USE_INMP441
+    bool "Capture from INMP441 (I2S MEMS mic)"
+    default y
+    help
+        Initialize I2S RX for INMP441 on PIN_I2S_CLK/WS/DIN.
+        If channel setup fails, firmware falls back to the 440 Hz test tone on PTT.
+
+config VIBEMIC_MIC_TONE_FALLBACK
+    bool "Use tone when mic frames stay silent"
+    depends on VIBEMIC_USE_INMP441
+    default y
+    help
+        Before the mic arrives, I2S may open but return near-silence.
+        Keep streaming the test tone on PTT until a non-silent frame is seen once.
+
+config VIBEMIC_ENABLE_TOUCHPAD_PROBE
+    bool "Probe I2C touchpad at boot"
+    default n
+    help
+        When enabled, firmware attempts a simple I2C probe and sets CAPS.has_touchpad.
+
+endmenu

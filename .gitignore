@@ -1,0 +1,64 @@
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.history/
+*.swp
+*~
+
+# Logs and local scratch output
+*.log
+
+# Python (ESP-IDF tooling)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+coverage/
+**/doc/api/
+**/ephemeral/
+.widget_preview/
+*.symbols
+app.*.map.json
+
+# Flutter / native build trees
+**/build/
+
+# Android (if the platform is added later)
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/*.jks
+**/*.keystore
+
+# iOS / macOS
+**/Pods/
+**/DerivedData/
+**/xcuserdata/
+**/*.xcuserstate
+
+# ESP-IDF
+# sdkconfig is generated from sdkconfig.defaults (and sdkconfig.defaults.<chip>).
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/.cache/
+compile_commands.json
+.cache/

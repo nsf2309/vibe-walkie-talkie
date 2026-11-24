@@ -1,0 +1,27 @@
+name: vibemic
+description: VibeMic companion — BLE audio rewrite + macros for Windows/macOS/Linux.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_blue_plus: 2.3.15
+  shared_preferences: ^2.3.3
+  collection: ^1.18.0
+  path: ^1.9.0
+  window_manager: ^0.4.3
+  material_ui: ^1.11.1
+  flutter_blue_plus_winrt: 0.0.23
+  screen_retriever: ^0.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
